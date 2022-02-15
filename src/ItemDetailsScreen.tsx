@@ -30,7 +30,7 @@ export default function ItemDetailsScreen({ route, navigation }) {
         <KindSelector current={item.kind} onChange={kind => setItem({...item, kind})} />
         <Actions item={item} onChange={i => {
           setItem(i);
-          navigation.goBack();
+          setTimeout(() => navigation.goBack());
         }} />
       </View>
     </ScreenRoot>

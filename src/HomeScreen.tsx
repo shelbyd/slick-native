@@ -12,6 +12,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     const subscription = store.openItems().subscribe(items => {
+      items = items.filter(i => i.completedAt == null);
       items.sort((a, b) => a.createdAt - b.createdAt);
       setItems(items);
     });
