@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import HomeScreen from './src/HomeScreen';
@@ -15,6 +15,7 @@ const theme = {
     ...DefaultTheme.colors,
     background: '#121212',
     text: '#FFFFFF',
+    placeholder: '#DDDDDD',
   },
 };
 
@@ -30,7 +31,7 @@ const navigationScreenOptions = {
 export default function App() {
   return (
     <PaperProvider theme={theme}>
-      <NavigationContainer>
+      <NavigationContainer theme={DarkTheme}>
         <Stack.Navigator
             initialRouteName="Home"
             screenOptions={navigationScreenOptions}>

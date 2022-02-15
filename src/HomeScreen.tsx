@@ -8,7 +8,9 @@ export default function HomeScreen({ navigation }) {
     <ScreenRoot>
       <CenterContent>
         <Text>Open up App.tsx to start working on your app!</Text>
-        <FAB style={styles.fab} icon="plus" onPress={() => navigation.navigate('ItemDetails')} />
+        <FAB style={styles.fab} icon="plus" onPress={() => {
+          navigation.navigate('ItemDetails');
+        }} />
       </CenterContent>
     </ScreenRoot>
   );
