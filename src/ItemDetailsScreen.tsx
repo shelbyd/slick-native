@@ -4,6 +4,7 @@ import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-n
 
 import { StoreContext } from './Injection';
 import { empty, Kind, KIND_DATA } from './Item';
+import { ItemInList } from './ItemInList';
 import { itemActions } from './ItemActions';
 import { CenterContent, ScreenRoot } from './UiUtils';
 
@@ -27,6 +28,7 @@ export default function ItemDetailsScreen({ route, navigation }) {
             value={item.title}
             onChangeText={text => setItem({...item, title: text})} />
         <KindSelector current={item.kind} onChange={kind => setItem({...item, kind})} />
+        <Parent item={item} />
         <Actions item={item} onChange={i => {
           setItem(i);
           setTimeout(() => navigation.goBack());
@@ -70,6 +72,27 @@ function KindSelector({current, onChange}: { current: Kind, onChange: (kind: Kin
         );
       })
     }
+    </View>
+  );
+}
+
+function Parent({ item }: { item: Item }) {
+  if (item.parent == null) return null;
+
+  const [parent, setParent] = useState(null);
+  const store = useContext(StoreContext);
+
+  useEffect(async () => {
+    const loaded = await store.load(item.parent);
+    setParent(loaded);
+  }, [item]);
+
+  if (parent == null) return null;
+
+  return (
+    <View style={{marginTop: 8}}>
+      <Title>Parent</Title>
+      <ItemInList item={parent} />
     </View>
   );
 }

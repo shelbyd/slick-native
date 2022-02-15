@@ -19,6 +19,15 @@ export class Store {
     this.notifyItemChange();
   }
 
+  async load(id: string): Promise<Item|null> {
+    const json = await this.backing.getItem(`@items/${id}`);
+    const [item, didMigrate] = parseMigrate(json);
+    if (didMigrate) {
+      await this.save(item);
+    }
+    return item;
+  }
+
   openItems(): Observable<Item[]> {
     this.notifyItemChange();
     return this._openItems;
