@@ -9,6 +9,10 @@ export interface Item {
 
 export enum Kind {
   INBOX = 'inbox',
+  NEXT_ACTION = 'next_action',
+  PROJECT = 'project',
+  WAITING_FOR = 'waiting_for',
+  SOMEDAY = 'someday',
 };
 
 export function empty(): Item {
@@ -33,3 +37,31 @@ export function parseMigrate(json: string): [Item, boolean] {
 
   return [fromJson, mutated];
 }
+
+export const KIND_DATA = {
+  [Kind.INBOX]: {
+    color: 'orange',
+    icon: 'email',
+    text: 'Inbox',
+  },
+  [Kind.NEXT_ACTION]: {
+    color: 'green',
+    icon: 'checkbox-marked',
+    text: 'Next Action',
+  },
+  [Kind.PROJECT]: {
+    color: 'yellow',
+    icon: 'format-list-numbered',
+    text: 'Project',
+  },
+  [Kind.WAITING_FOR]: {
+    color: 'red',
+    icon: 'clock',
+    text: 'Waiting For',
+  },
+  [Kind.SOMEDAY]: {
+    color: 'blue',
+    icon: 'weather-night',
+    text: 'Someday / Maybe',
+  },
+};

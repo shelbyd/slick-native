@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { FAB, Text, List } from 'react-native-paper';
 
-import { empty } from './Item';
+import { empty, Kind, KIND_DATA } from './Item';
 import { StoreContext } from './Injection';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
@@ -19,11 +19,13 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   const renderListItem = ({item}) => {
+    const kindDesc = KIND_DATA[item.kind];
+
     return (
       <List.Item
           title={item.title}
           key={item.id}
-          left={props => <List.Icon {...props} icon="email" />}
+          left={props => <List.Icon {...props} color={kindDesc.color} icon={kindDesc.icon} />}
           onPress={() => navigation.navigate('ItemDetails', {item})}/>
     );
   };
