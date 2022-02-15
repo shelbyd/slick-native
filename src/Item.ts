@@ -1,11 +1,15 @@
 import uuid from 'react-native-uuid';
 
+export type ItemId = string;
+
 export interface Item {
-  id: string,
+  id: ItemId,
   title: string;
   kind: Kind;
   createdAt: Date;
   completedAt?: Date;
+  parent?: ItemId;
+  children: ItemId[];
 };
 
 export enum Kind {
@@ -22,7 +26,7 @@ export function empty(): Item {
     kind: Kind.INBOX,
     title: '',
     createdAt: new Date(),
-    completedAt: null,
+    children: [],
   };
 }
 
@@ -39,6 +43,10 @@ export function parseMigrate(json: string): [Item, boolean] {
 
   if (fromJson.completedAt != null) {
     fromJson.completedAt = new Date(fromJson.completedAt);
+  }
+
+  if (fromJson.children == null) {
+    fromJson.children = [];
   }
 
   return [fromJson, mutated];

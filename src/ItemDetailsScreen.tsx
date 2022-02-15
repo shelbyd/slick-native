@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Button, Text, TextInput, Title } from 'react-native-paper';
+import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-native-paper';
 
 import { StoreContext } from './Injection';
 import { empty, Kind, KIND_DATA } from './Item';
@@ -12,11 +12,10 @@ export default function ItemDetailsScreen({ route, navigation }) {
   const store = useContext(StoreContext);
 
   useEffect(() => {
-    return async () => {
-      // TODO(shelbyd): This saves every time anything changes.
-      // Make it only change when navigating away.
+    const unsub = navigation.addListener('beforeRemove', async () => {
       await store.save(item);
-    };
+    });
+    return unsub;
   }, [item]);
 
   return (
@@ -61,6 +60,7 @@ function KindSelector({current, onChange}: { current: Kind, onChange: (kind: Kin
       Object.entries(KIND_DATA).map(([kind, desc]) => {
         return (
           <Button
+              key={kind}
               color={desc.color}
               mode={kind === current ? 'contained' : 'outlined'}
               style={{marginLeft: 4, marginRight: 4, marginTop: 8}}
@@ -75,30 +75,60 @@ function KindSelector({current, onChange}: { current: Kind, onChange: (kind: Kin
 }
 
 function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => void }) {
+  const store = useContext(StoreContext);
+  const theme = useTheme();
+
   const actions = itemActions(item);
+
+  const [modal, setModal] = useState(null);
 
   if (actions.length === 0) {
     return null;
   }
 
+  const containerStyle = {
+    backgroundColor: theme.colors.background,
+    padding: 16,
+    margin: 16,
+  };
+
   return (
     <View style={{marginTop: 8}}>
+      <Portal>
+        <Modal
+            visible={modal != null}
+            onDismiss={() => setModal(null)}
+            contentContainerStyle={containerStyle}>
+          {modal}
+        </Modal>
+      </Portal>
       <Title>Actions</Title>
-    {
-      actions.map(action => {
-        return (
-          <Button
-              icon={action.icon}
-              mode="contained"
-              color={action.color}
-              key={action.title}
-              style={{marginTop: 8}}
-              onPress={() => onChange(action.perform(item))}>
-            {action.title}
-          </Button>
-        );
-      })
-    }
+      {
+        actions.map(action => {
+          return (
+            <Button
+                icon={action.icon}
+                mode="contained"
+                color={action.color}
+                key={action.title}
+                style={{marginTop: 8}}
+                onPress={() => {
+                  action.perform({
+                    item,
+                    update: async (primary, additional) => {
+                      for (const item of (additional || [])) {
+                        await store.save(item);
+                      }
+                      onChange(primary);
+                    },
+                    render: setModal,
+                  });
+                }}>
+              {action.title}
+            </Button>
+          );
+        })
+      }
     </View>
   );
 }
