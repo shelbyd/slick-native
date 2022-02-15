@@ -4,7 +4,8 @@ export interface Item {
   id: string,
   title: string;
   kind: Kind;
-  createdAt: Date,
+  createdAt: Date;
+  completedAt?: Date;
 };
 
 export enum Kind {
@@ -21,6 +22,7 @@ export function empty(): Item {
     kind: Kind.INBOX,
     title: '',
     createdAt: new Date(),
+    completedAt: null,
   };
 }
 
@@ -33,6 +35,10 @@ export function parseMigrate(json: string): [Item, boolean] {
     mutated = true;
   } else {
     fromJson.createdAt = new Date(fromJson.createdAt);
+  }
+
+  if (fromJson.completedAt != null) {
+    fromJson.completedAt = new Date(fromJson.completedAt);
   }
 
   return [fromJson, mutated];
