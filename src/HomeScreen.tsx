@@ -1,13 +1,39 @@
-import { FAB, Text } from 'react-native-paper';
-import { StyleSheet, View } from 'react-native';
+import { useContext, useEffect, useState } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { FAB, Text, List } from 'react-native-paper';
 
+import { StoreContext } from './Injection';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
 export default function HomeScreen({ navigation }) {
+  const [items, setItems] = useState([]);
+  const store = useContext(StoreContext);
+
+  useEffect(() => {
+    const subscription = store.openItems().subscribe(items => {
+      items.sort((a, b) => a.createdAt - b.createdAt);
+      setItems(items);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const renderListItem = ({item}) => {
+    return (
+      <List.Item
+          title={item.title}
+          key={item.id}
+          left={props => <List.Icon {...props} icon="email" />} />
+    );
+  };
+
   return (
     <ScreenRoot>
       <CenterContent>
-        <Text>Open up App.tsx to start working on your app!</Text>
+        <FlatList
+            style={{alignSelf: 'stretch'}}
+            data={items}
+            renderItem={renderListItem} />
+
         <FAB style={styles.fab} icon="plus" onPress={() => {
           navigation.navigate('ItemDetails');
         }} />

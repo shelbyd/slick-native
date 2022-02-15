@@ -21,7 +21,11 @@ export default function ItemDetailsScreen() {
   return (
     <ScreenRoot>
       <View style={styles.container}>
-    <TextInput label="Title" value={item.title} onChangeText={text => setItem({...item, title: text})} />
+    <TextInput
+        label="Title"
+        autoFocus={true}
+        value={item.title}
+        onChangeText={text => setItem({...item, title: text})} />
       </View>
     </ScreenRoot>
   );
