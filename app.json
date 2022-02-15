@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "Slick",
-    "slug": "Slick",
-    "version": "1.0.0",
+    "slug": "slick",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#121212"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -20,9 +20,11 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.fiftyonevr.slick",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#121212"
       }
     },
     "web": {
