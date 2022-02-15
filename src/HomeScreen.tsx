@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { FAB, Text, List } from 'react-native-paper';
 
+import { empty } from './Item';
 import { StoreContext } from './Injection';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
@@ -22,7 +23,8 @@ export default function HomeScreen({ navigation }) {
       <List.Item
           title={item.title}
           key={item.id}
-          left={props => <List.Icon {...props} icon="email" />} />
+          left={props => <List.Icon {...props} icon="email" />}
+          onPress={() => navigation.navigate('ItemDetails', {item})}/>
     );
   };
 
@@ -35,7 +37,7 @@ export default function HomeScreen({ navigation }) {
             renderItem={renderListItem} />
 
         <FAB style={styles.fab} icon="plus" onPress={() => {
-          navigation.navigate('ItemDetails');
+          navigation.navigate('ItemDetails', {item: empty()});
         }} />
       </CenterContent>
     </ScreenRoot>

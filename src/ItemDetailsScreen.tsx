@@ -6,8 +6,8 @@ import { StoreContext } from './Injection';
 import { empty } from './Item';
 import { CenterContent, ScreenRoot } from './UiUtils';
 
-export default function ItemDetailsScreen() {
-  const [item, setItem] = useState(empty());
+export default function ItemDetailsScreen({ route }) {
+  const [item, setItem] = useState(route.params.item || empty());
   const store = useContext(StoreContext);
 
   useEffect(() => {
