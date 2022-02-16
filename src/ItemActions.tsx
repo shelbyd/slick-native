@@ -47,6 +47,34 @@ const COMMON_ACTIONS: Action[] = [
       navigationPush('ItemDetails', {item: newItem});
     },
   },
+  {
+    title : 'Snooze 1h',
+    icon : 'alarm-snooze',
+    color : 'blue',
+    applies : (item) => {
+      if (item.completedAt != null) return false;
+      if (item.snoozedUntil > new Date()) return false;
+      return [Kind.NEXT_ACTION].includes(item.kind);
+    },
+    perform : ({item, update}) => {
+      const oneHour = 60 * 60 * 1000;
+      update({...item, snoozedUntil: new Date(new Date().getTime() + oneHour)});
+    },
+  },
+  {
+    title : 'Snooze 24h',
+    icon : 'alarm-snooze',
+    color : 'blue',
+    applies : (item) => {
+      if (item.completedAt != null) return false;
+      if (item.snoozedUntil > new Date()) return false;
+      return [Kind.NEXT_ACTION].includes(item.kind);
+    },
+    perform : ({item, update}) => {
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      update({...item, snoozedUntil: new Date(new Date().getTime() + twentyFourHours)});
+    },
+  },
 ];
 
 const DEEP_ACTIONS: Action[] = [

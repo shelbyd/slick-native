@@ -11,19 +11,21 @@ import { nextUpkeepTask } from './Upkeep';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
 export default function HomeScreen({ navigation }) {
-  const [items, setItems] = useState([]);
+  const [openItems, setOpenItems] = useState([]);
   const store = useContext(StoreContext);
 
   useEffect(() => {
     const subscription = store.openItems().subscribe(items => {
       items = items.filter(i => i.completedAt == null);
       items.sort((a, b) => a.createdAt - b.createdAt);
-      setItems(items);
+      setOpenItems(items);
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  const nextAction = items.filter(i => i.kind == Kind.NEXT_ACTION)[0];
+  const nextAction = openItems
+      .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
+      .filter(i => i.kind == Kind.NEXT_ACTION)[0];
 
   const navigateTo = (item) => () => navigation.push('ItemDetails', {item});
 
@@ -32,11 +34,11 @@ export default function HomeScreen({ navigation }) {
       <View style={{flex: 1, alignItems: 'stretch'}}>
         {nextAction == null ? null : <ActionableItem item={nextAction} />}
         <Divider style={{flex: 0}} />
-        {nextUpkeepTask(items)}
+        {nextUpkeepTask(openItems)}
         <Divider style={{flex: 0}} />
         <FlatList
             style={{flex: 1}}
-            data={items}
+            data={openItems}
             renderItem={({item}) =>
               <ItemInList item={item} key={item.id} onPress={navigateTo(item)} />
             } />

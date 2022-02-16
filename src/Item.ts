@@ -10,6 +10,7 @@ export interface Item {
   completedAt?: Date;
   parent?: ItemId;
   children: ItemId[];
+  snoozedUntil?: Date;
 };
 
 export enum Kind {
@@ -43,6 +44,10 @@ export function parseMigrate(json: string): [Item, boolean] {
 
   if (fromJson.completedAt != null) {
     fromJson.completedAt = new Date(fromJson.completedAt);
+  }
+
+  if (fromJson.snoozedUntil != null) {
+    fromJson.snoozedUntil = new Date(fromJson.snoozedUntil);
   }
 
   if (fromJson.children == null) {
