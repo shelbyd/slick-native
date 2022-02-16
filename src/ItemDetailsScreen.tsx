@@ -14,6 +14,7 @@ export default function ItemDetailsScreen({ route, navigation }) {
 
   useEffect(() => {
     const unsub = navigation.addListener('beforeRemove', async () => {
+      // TODO(shelbyd): Stop navigation until save is done.
       await store.save(item);
     });
     return unsub;

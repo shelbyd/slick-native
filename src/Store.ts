@@ -1,15 +1,19 @@
 import deepEqual from 'deep-equal';
-import { ReplaySubject, Observable } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Observable } from 'rxjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Item, parseMigrate } from './Item';
 
 export class Store {
+  public readonly savingSubject = new BehaviorSubject(0);
+
   private readonly _openItems = new ReplaySubject(1);
 
   constructor(private readonly backing: AsyncStorage) {}
 
   async save(item: Item) {
+    this.savingSubject.next(this.savingSubject.value + 1);
+
     if (item.title == "") {
       console.log('Deleting item', item);
       await this.backing.removeItem(`@items/${item.id}`);
@@ -38,6 +42,7 @@ export class Store {
       }));
     }
 
+    this.savingSubject.next(this.savingSubject.value - 1);
     await this.notifyItemChange();
   }
 
