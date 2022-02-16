@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function KindSelector({current, onChange}: { current: Kind, onChange: (kind: Kind) => void }) {
+export function KindSelector({current, onChange}: { current: Kind, onChange: (kind: Kind) => void }) {
   const style = {
     flexDirection: 'row',
     flexWrap: 'wrap',

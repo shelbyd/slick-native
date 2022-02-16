@@ -2,10 +2,12 @@ import { useContext, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Avatar, Button, Divider, FAB, Text, Title, List } from 'react-native-paper';
 
+import { ActionableItem } from './ActionableItem';
 import { empty, Kind, KIND_DATA } from './Item';
 import { simpleActions } from './ItemActions';
 import { ItemInList } from './ItemInList';
 import { StoreContext } from './Injection';
+import { nextUpkeepTask } from './Upkeep';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
 export default function HomeScreen({ navigation }) {
@@ -28,7 +30,9 @@ export default function HomeScreen({ navigation }) {
   return (
     <ScreenRoot>
       <View style={{flex: 1, alignItems: 'stretch'}}>
-        {nextAction == null ? null : <RichItem item={nextAction} onPress={navigateTo(nextAction)}/>}
+        {nextAction == null ? null : <ActionableItem item={nextAction} />}
+        <Divider style={{flex: 0}} />
+        {nextUpkeepTask(items)}
         <Divider style={{flex: 0}} />
         <FlatList
             style={{flex: 1}}
