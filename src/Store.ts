@@ -1,3 +1,4 @@
+import deepEqual from 'deep-equal';
 import { ReplaySubject, Observable } from 'rxjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -12,11 +13,32 @@ export class Store {
     if (item.title == "") {
       console.log('Deleting item', item);
       await this.backing.removeItem(`@items/${item.id}`);
+
+      if (item.parent != null) {
+        await this.update(item.parent, (parent) => {
+          parent.children = parent.children.filter(id => id !== item.id);
+        });
+      }
+      await Promise.all(item.children.map(async (childId) => {
+        await this.update(childId, (child) => child.parent = null);
+      }));
     } else {
       console.log('Saving item', item);
       await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
+
+      if (item.parent != null) {
+        await this.update(item.parent, (parent) => {
+          if (!parent.children.includes(item.id)) {
+            parent.children.push(item.id);
+          }
+        });
+      }
+      await Promise.all(item.children.map(async (childId) => {
+        await this.update(childId, (child) => child.parent = item.id);
+      }));
     }
-    this.notifyItemChange();
+
+    await this.notifyItemChange();
   }
 
   async load(id: string): Promise<Item|null> {
@@ -26,6 +48,16 @@ export class Store {
       await this.save(item);
     }
     return item;
+  }
+
+  async update(id: string, mutate: (item: Item) => void) {
+    const notMutated = await this.load(id);
+    const mutated = await this.load(id);
+    mutate(mutated);
+
+    if (!deepEqual(notMutated, mutated)) {
+      await this.save(mutated);
+    }
   }
 
   openItems(): Observable<Item[]> {

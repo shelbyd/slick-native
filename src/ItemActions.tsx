@@ -1,4 +1,4 @@
-import { Item, Kind, KIND_DATA } from './Item';
+import { empty, Item, Kind, KIND_DATA } from './Item';
 import { PickItem } from './PickItem';
 
 export interface Action {
@@ -6,7 +6,12 @@ export interface Action {
   icon: string;
   color?: string;
   applies: (item: Item) => boolean;
-  perform: (item: Item) => Item;
+  perform: (actions: {
+    item: Item,
+    update: (primary: Item, additional: Item[]) => void,
+    render: (component: any) => void,
+    navigationPush: (...args: any[]) => void,
+  }) => Item;
 }
 
 const SIMPLE_ACTIONS: Action[] = [
@@ -25,6 +30,22 @@ const SIMPLE_ACTIONS: Action[] = [
       ].includes(item.kind);
     },
     perform : ({update, item}) => update({...item, completedAt : new Date()}),
+  },
+  {
+    title : 'Add Child',
+    icon : 'file-tree',
+    color : KIND_DATA[Kind.PROJECT].color,
+    applies : (item) => {
+      if (item.completedAt != null)
+        return false;
+      return [Kind.PROJECT].includes(item.kind);
+    },
+    perform : ({item, navigationPush}) => {
+      const newItem = empty();
+      newItem.kind = Kind.NEXT_ACTION;
+      newItem.parent = item.id;
+      navigationPush('ItemDetails', {item: newItem});
+    },
   },
 ];
 

@@ -52,6 +52,7 @@ export function ActionableItem({ item }: { item: Item }) {
                         }
                         await store.save(primary);
                       },
+                      navigationPush: (...args) => navigation.push(...args),
                     });
                   }}>
                 {action.title}
