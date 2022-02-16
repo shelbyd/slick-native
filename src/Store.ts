@@ -14,48 +14,53 @@ export class Store {
   async save(item: Item) {
     this.savingSubject.next(this.savingSubject.value + 1);
 
-    if (item.title == "") {
-      console.log('Deleting item', item);
-      await this.backing.removeItem(`@items/${item.id}`);
+    try {
+      if (item.title == "") {
+        console.log('Deleting item', item);
+        await this.backing.removeItem(`@items/${item.id}`);
 
-      if (item.parent != null) {
-        await this.update(item.parent, (parent) => {
-          parent.children = parent.children.filter(id => id !== item.id);
-        });
-      }
-      await Promise.all(item.children.map(async (childId) => {
-        await this.update(childId, (child) => child.parent = null);
-      }));
-    } else {
-      const saved = await this.load(item.id);
-
-      console.log('Saving item', item);
-      await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
-
-      if (item.parent == null) {
-        if (saved?.parent != null) {
-          await this.update(saved.parent, (parent) => {
+        if (item.parent != null) {
+          await this.update(item.parent, (parent) => {
             parent.children = parent.children.filter(id => id !== item.id);
           });
         }
+        await Promise.all(item.children.map(async (childId) => {
+          await this.update(childId, (child) => child.parent = null);
+        }));
       } else {
-        await this.update(item.parent, (parent) => {
-          if (!parent.children.includes(item.id)) {
-            parent.children.push(item.id);
-          }
-        });
-      }
-      await Promise.all(item.children.map(async (childId) => {
-        await this.update(childId, (child) => child.parent = item.id);
-      }));
-    }
+        const saved = await this.load(item.id);
 
-    this.savingSubject.next(this.savingSubject.value - 1);
-    await this.notifyItemChange();
+        console.log('Saving item', item);
+        await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
+
+        if (item.parent == null) {
+          if (saved?.parent != null) {
+            await this.update(saved.parent, (parent) => {
+              parent.children = parent.children.filter(id => id !== item.id);
+            });
+          }
+        } else {
+          await this.update(item.parent, (parent) => {
+            if (!parent.children.includes(item.id)) {
+              parent.children.push(item.id);
+            }
+          });
+        }
+        await Promise.all(item.children.map(async (childId) => {
+          await this.update(childId, (child) => child.parent = item.id);
+        }));
+      }
+
+      await this.notifyItemChange();
+    } finally {
+      this.savingSubject.next(this.savingSubject.value - 1);
+    }
   }
 
   async load(id: string): Promise<Item|null> {
     const json = await this.backing.getItem(`@items/${id}`);
+    if (json == null) return null;
+
     const [item, didMigrate] = parseMigrate(json);
     if (didMigrate) {
       await this.save(item);
