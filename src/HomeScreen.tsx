@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
-import { FAB, Text, List } from 'react-native-paper';
+import { Avatar, Button, Divider, FAB, Text, Title, List } from 'react-native-paper';
 
 import { empty, Kind, KIND_DATA } from './Item';
+import { simpleActions } from './ItemActions';
 import { ItemInList } from './ItemInList';
 import { StoreContext } from './Injection';
 import { ScreenRoot, CenterContent } from './UiUtils';
@@ -20,23 +21,28 @@ export default function HomeScreen({ navigation }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const nextAction = items.filter(i => i.kind == Kind.NEXT_ACTION)[0];
+
   return (
     <ScreenRoot>
-      <CenterContent>
+      <View style={{flex: 1, alignItems: 'stretch'}}>
+        {nextAction == null ? null : <RichItem item={nextAction} />}
+        <Divider style={{flex: 0}} />
         <FlatList
-            style={{alignSelf: 'stretch'}}
+            style={{flex: 1}}
             data={items}
             renderItem={({item}) =>
               <ItemInList
                   item={item}
+                  key={item.id}
                   onPress={() => navigation.push('ItemDetails', {item})}
-              />}
-        />
+                  />}
+            />
+      </View>
 
-        <FAB style={styles.fab} icon="plus" onPress={() => {
-          navigation.push('ItemDetails', {item: empty()});
-        }} />
-      </CenterContent>
+      <FAB style={styles.fab} icon="plus" onPress={() => {
+        navigation.push('ItemDetails', {item: empty()});
+      }} />
     </ScreenRoot>
   );
 }
@@ -49,3 +55,47 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
 });
+
+function RichItem({ item }: { item: Item }) {
+  const store = useContext(StoreContext);
+
+  const actions = simpleActions(item);
+
+  return (
+    <View style={{padding: 16}}>
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <Avatar.Icon
+            icon={KIND_DATA[Kind.NEXT_ACTION].icon}
+            style={{marginRight: 16, backgroundColor: KIND_DATA[Kind.NEXT_ACTION].color}} />
+        <Title>{item.title}</Title>
+      </View>
+
+      <FlatList
+          data={actions}
+          style={{marginTop: 16}}
+          keyExtractor={(action) => action.title}
+          renderItem={({item: action}) => {
+            return (
+              <Button
+                  icon={action.icon}
+                  mode="contained"
+                  color={action.color}
+                  style={{marginTop: 8}}
+                  onPress={() => {
+                    action.perform({
+                      item,
+                      update: async (primary, additional) => {
+                        for (const item of (additional || [])) {
+                          await store.save(item);
+                        }
+                        await store.save(primary);
+                      },
+                    });
+                  }}>
+                {action.title}
+              </Button>
+            );
+          }}/>
+    </View>
+  );
+}

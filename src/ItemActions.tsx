@@ -9,7 +9,7 @@ export interface Action {
   perform: (item: Item) => Item;
 }
 
-const ALL_ACTIONS: Action[] = [
+const SIMPLE_ACTIONS: Action[] = [
   {
     title : 'Complete',
     icon : 'check',
@@ -26,6 +26,9 @@ const ALL_ACTIONS: Action[] = [
     },
     perform : ({update, item}) => update({...item, completedAt : new Date()}),
   },
+];
+
+const COMPLEX_ACTIONS: Action[] = [
   {
     title : 'Set Parent',
     icon : 'file-tree',
@@ -52,6 +55,10 @@ const ALL_ACTIONS: Action[] = [
   },
 ];
 
-export function itemActions(item: Item) {
-  return ALL_ACTIONS.filter(action => action.applies(item));
+export function fullActions(item: Item) {
+  return [...SIMPLE_ACTIONS, ...COMPLEX_ACTIONS].filter(action => action.applies(item));
+}
+
+export function simpleActions(item: Item) {
+  return SIMPLE_ACTIONS.filter(action => action.applies(item));
 }

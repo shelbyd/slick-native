@@ -5,7 +5,7 @@ import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-n
 import { StoreContext } from './Injection';
 import { empty, Kind, KIND_DATA } from './Item';
 import { ItemInList } from './ItemInList';
-import { itemActions } from './ItemActions';
+import { fullActions } from './ItemActions';
 import { CenterContent, ScreenRoot } from './UiUtils';
 
 export default function ItemDetailsScreen({ route, navigation }) {
@@ -101,7 +101,7 @@ function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => voi
   const store = useContext(StoreContext);
   const theme = useTheme();
 
-  const actions = itemActions(item);
+  const actions = fullActions(item);
 
   const [modal, setModal] = useState(null);
 
