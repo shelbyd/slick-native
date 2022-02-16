@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Avatar, Button, Divider, FAB, Text, Title, List } from 'react-native-paper';
 
 import { empty, Kind, KIND_DATA } from './Item';
@@ -23,26 +23,22 @@ export default function HomeScreen({ navigation }) {
 
   const nextAction = items.filter(i => i.kind == Kind.NEXT_ACTION)[0];
 
+  const navigateTo = (item) => () => navigation.push('ItemDetails', {item});
+
   return (
     <ScreenRoot>
       <View style={{flex: 1, alignItems: 'stretch'}}>
-        {nextAction == null ? null : <RichItem item={nextAction} />}
+        {nextAction == null ? null : <RichItem item={nextAction} onPress={navigateTo(nextAction)}/>}
         <Divider style={{flex: 0}} />
         <FlatList
             style={{flex: 1}}
             data={items}
             renderItem={({item}) =>
-              <ItemInList
-                  item={item}
-                  key={item.id}
-                  onPress={() => navigation.push('ItemDetails', {item})}
-                  />}
-            />
+              <ItemInList item={item} key={item.id} onPress={navigateTo(item)} />
+            } />
       </View>
 
-      <FAB style={styles.fab} icon="plus" onPress={() => {
-        navigation.push('ItemDetails', {item: empty()});
-      }} />
+      <FAB style={styles.fab} icon="plus" onPress={navigateTo(empty())} />
     </ScreenRoot>
   );
 }
@@ -56,19 +52,21 @@ const styles = StyleSheet.create({
   },
 });
 
-function RichItem({ item }: { item: Item }) {
+function RichItem({ item, onPress }: { item: Item, onPress: () => void }) {
   const store = useContext(StoreContext);
 
   const actions = simpleActions(item);
 
   return (
     <View style={{padding: 16}}>
-      <View style={{flexDirection: 'row', alignItems: 'center'}}>
-        <Avatar.Icon
-            icon={KIND_DATA[Kind.NEXT_ACTION].icon}
-            style={{marginRight: 16, backgroundColor: KIND_DATA[Kind.NEXT_ACTION].color}} />
-        <Title>{item.title}</Title>
-      </View>
+      <TouchableOpacity onPress={onPress}>
+        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+          <Avatar.Icon
+              icon={KIND_DATA[Kind.NEXT_ACTION].icon}
+              style={{marginRight: 16, backgroundColor: KIND_DATA[Kind.NEXT_ACTION].color}} />
+          <Title>{item.title}</Title>
+        </View>
+      </TouchableOpacity>
 
       <FlatList
           data={actions}
