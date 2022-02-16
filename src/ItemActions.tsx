@@ -14,7 +14,7 @@ export interface Action {
   }) => Item;
 }
 
-const SIMPLE_ACTIONS: Action[] = [
+const COMMON_ACTIONS: Action[] = [
   {
     title : 'Complete',
     icon : 'check',
@@ -49,7 +49,7 @@ const SIMPLE_ACTIONS: Action[] = [
   },
 ];
 
-const COMPLEX_ACTIONS: Action[] = [
+const DEEP_ACTIONS: Action[] = [
   {
     title : 'Set Parent',
     icon : 'file-tree',
@@ -74,12 +74,23 @@ const COMPLEX_ACTIONS: Action[] = [
       );
     }
   },
+  {
+    title : 'Clear Parent',
+    icon : 'file-tree',
+    color : KIND_DATA[Kind.PROJECT].color,
+    applies : (item) => {
+      return item.parent != null;
+    },
+    perform : ({item, update}) => {
+      update({...item, parent: null});
+    },
+  },
 ];
 
 export function fullActions(item: Item) {
-  return [...SIMPLE_ACTIONS, ...COMPLEX_ACTIONS].filter(action => action.applies(item));
+  return [...COMMON_ACTIONS, ...DEEP_ACTIONS].filter(action => action.applies(item));
 }
 
 export function simpleActions(item: Item) {
-  return SIMPLE_ACTIONS.filter(action => action.applies(item));
+  return COMMON_ACTIONS.filter(action => action.applies(item));
 }

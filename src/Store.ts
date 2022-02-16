@@ -27,10 +27,18 @@ export class Store {
         await this.update(childId, (child) => child.parent = null);
       }));
     } else {
+      const saved = await this.load(item.id);
+
       console.log('Saving item', item);
       await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
 
-      if (item.parent != null) {
+      if (item.parent == null) {
+        if (saved?.parent != null) {
+          await this.update(saved.parent, (parent) => {
+            parent.children = parent.children.filter(id => id !== item.id);
+          });
+        }
+      } else {
         await this.update(item.parent, (parent) => {
           if (!parent.children.includes(item.id)) {
             parent.children.push(item.id);
