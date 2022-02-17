@@ -2,23 +2,25 @@ import { View } from 'react-native';
 import { Title } from 'react-native-paper';
 
 import { ActionableItem } from './ActionableItem';
-import { Item, Kind } from './Item';
+import { isUnacked, Item, Kind } from './Item';
 
 export function nextUpkeepTask(openItems: Item[]) {
-  const inbox = openItems.find(i => i.kind === Kind.INBOX);
-
-  if (inbox != null) {
-    return <ActionableItem item={inbox} />;
-  }
-
   const itemMap = new Map();
   for (const item of openItems) {
     itemMap.set(item.id, item);
   }
 
-  const projectMissing = openItems.find(i => isProjectMissingItem(i, itemMap));
-  if (projectMissing != null) {
-    return <ActionableItem item={projectMissing} />;
+  const itemGetters = [
+    () => openItems.find(i => i.kind === Kind.INBOX),
+    () => openItems.find(i => isProjectMissingItem(i, itemMap)),
+    () => openItems.find(i => isUnacked(i)),
+  ];
+
+  for (const getter of itemGetters) {
+    const item = getter();
+    if (item != null) {
+      return <ActionableItem item={item} />;
+    }
   }
 
   return null;

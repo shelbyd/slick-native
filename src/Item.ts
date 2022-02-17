@@ -11,6 +11,7 @@ export interface Item {
   parent?: ItemId;
   children: ItemId[];
   snoozedUntil?: Date;
+  ackedAt?: Date;
 };
 
 export enum Kind {
@@ -50,6 +51,10 @@ export function parseMigrate(json: string): [Item, boolean] {
     fromJson.snoozedUntil = new Date(fromJson.snoozedUntil);
   }
 
+  if (fromJson.ackedAt != null) {
+    fromJson.ackedAt = new Date(fromJson.ackedAt);
+  }
+
   if (fromJson.children == null) {
     fromJson.children = [];
   }
@@ -84,3 +89,24 @@ export const KIND_DATA = {
     text: 'Someday / Maybe',
   },
 };
+
+export const ONE_HOUR = 60 * 60 * 1000;
+export const TWENTY_FOUR_HOURS = 24 * ONE_HOUR;
+
+export function isUnacked(item: Item): boolean {
+  if (item.completedAt != null) return false;
+
+  if (item.kind === Kind.WAITING_FOR) {
+    return item.ackedAt == null || item.ackedAt < timePlusDuration(-TWENTY_FOUR_HOURS);
+  }
+  if (item.kind === Kind.SOMEDAY) {
+    return item.ackedAt == null || item.ackedAt < timePlusDuration(-7 * TWENTY_FOUR_HOURS);
+  }
+
+  return false;
+}
+
+export function timePlusDuration(ms: number): Date {
+  return new Date(new Date().getTime() + ms);
+}
+
