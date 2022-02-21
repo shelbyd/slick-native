@@ -16,7 +16,6 @@ export class Store {
 
     try {
       if (item.title == "") {
-        console.log('Deleting item', item);
         await this.backing.removeItem(`@items/${item.id}`);
 
         if (item.parent != null) {
@@ -30,7 +29,6 @@ export class Store {
       } else {
         const saved = await this.load(item.id);
 
-        console.log('Saving item', item);
         await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
 
         if (item.parent == null) {
@@ -70,6 +68,8 @@ export class Store {
 
   async update(id: string, mutate: (item: Item) => void) {
     const notMutated = await this.load(id);
+    if (notMutated == null) return;
+
     const mutated = await this.load(id);
     mutate(mutated);
 
