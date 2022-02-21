@@ -31,7 +31,9 @@ export class Store {
     }
   }
 
-  async load(id: string): Promise<Item|null> {
+  async load(id: string|null): Promise<Item|null> {
+    if (id == null) return null;
+
     const json = await this.backing.getItem(`@items/${id}`);
     if (json == null) return null;
 
@@ -42,7 +44,7 @@ export class Store {
     return item;
   }
 
-  async update(id: string, mutate: (item: Item) => void) {
+  async update(id: string|null, mutate: (item: Item) => void) {
     const notMutated = await this.load(id);
     if (notMutated == null) return;
 

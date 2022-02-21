@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
 import { StoreContext } from './Injection';
 import { empty, Kind, KIND_DATA } from './Item';
@@ -99,6 +100,7 @@ function Parent({ item }: { item: Item }) {
 }
 
 function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => void }) {
+  const navigation = useNavigation();
   const store = useContext(StoreContext);
   const theme = useTheme();
 
@@ -146,6 +148,7 @@ function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => voi
                       onChange(primary);
                     },
                     render: setModal,
+                    navigationPush: (...args) => navigation.push(...args),
                   });
                 }}>
               {action.title}
