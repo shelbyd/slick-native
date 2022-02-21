@@ -15,38 +15,14 @@ export class Store {
     this.savingSubject.next(this.savingSubject.value + 1);
 
     try {
+      const saved = await this.load(item.id);
+
       if (item.title == "") {
         await this.backing.removeItem(`@items/${item.id}`);
-
-        if (item.parent != null) {
-          await this.update(item.parent, (parent) => {
-            parent.children = parent.children.filter(id => id !== item.id);
-          });
-        }
-        await Promise.all(item.children.map(async (childId) => {
-          await this.update(childId, (child) => child.parent = null);
-        }));
+        await this.maintainContraints(saved, null);
       } else {
-        const saved = await this.load(item.id);
-
         await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
-
-        if (item.parent == null) {
-          if (saved?.parent != null) {
-            await this.update(saved.parent, (parent) => {
-              parent.children = parent.children.filter(id => id !== item.id);
-            });
-          }
-        } else {
-          await this.update(item.parent, (parent) => {
-            if (!parent.children.includes(item.id)) {
-              parent.children.push(item.id);
-            }
-          });
-        }
-        await Promise.all(item.children.map(async (childId) => {
-          await this.update(childId, (child) => child.parent = item.id);
-        }));
+        await this.maintainContraints(saved, item);
       }
 
       await this.notifyItemChange();
@@ -96,5 +72,34 @@ export class Store {
 
     const items = migrated.map(([item, _]) => item);
     this._openItems.next(items);
+  }
+
+  private async maintainContraints(previous: Item|null, current: Item|null) {
+    if (deepEqual(previous, current)) return;
+
+    if (previous?.parent != current?.parent) {
+      await this.update(previous?.parent, (parent) => {
+        parent.children = parent.children.filter(id => id !== previous.id);
+      });
+
+      await this.update(current?.parent, (parent) => {
+        if (!parent.children.includes(current.id)) {
+          parent.children.push(current.id);
+        }
+      });
+    }
+
+    const previousChildren = new Set(previous?.children || []);
+    const currentChildren = new Set(current?.children || []);
+
+    const diff = (a, b) => new Set([...a].filter(a => !b.has(a)));
+
+    for (const childId of diff(previousChildren, currentChildren)) {
+      await this.update(childId, child => child.parent = null);
+    }
+
+    for (const childId of diff(currentChildren, previousChildren)) {
+      await this.update(childId, (child) => child.parent = current.id);
+    }
   }
 }

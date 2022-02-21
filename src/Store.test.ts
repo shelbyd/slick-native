@@ -131,6 +131,38 @@ describe('Store', () => {
 
       expect((await store.load(child.id)).parent).toEqual(null);
     });
+
+    it('updates old parent when parent changes', async () => {
+      let oldParent = savable();
+      await store.save(oldParent);
+
+      const child = savable();
+      child.parent = oldParent.id;
+      await store.save(child);
+
+      let newParent = savable();
+      await store.save(newParent);
+
+      child.parent = newParent.id;
+      await store.save(child);
+
+      expect((await store.load(oldParent.id)).children).toEqual([]);
+    });
+
+    it('updates child when removed from parent', async () => {
+      let parent = savable();
+      await store.save(parent);
+
+      const child = savable();
+      child.parent = parent.id;
+      await store.save(child);
+
+      parent = await store.load(parent.id);
+      parent.children = [];
+      await store.save(parent);
+
+      expect((await store.load(child.id)).parent).toEqual(null);
+    });
   });
 
   describe('openItems', () => {
