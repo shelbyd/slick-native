@@ -12,7 +12,6 @@ export function ActionableItem({ item }: { item: Item }) {
   const store = useContext(StoreContext);
   const navigation = useContext(NavigationContext);
 
-  const actions = simpleActions(item);
   const desc = KIND_DATA[item.kind];
 
   return (
@@ -33,32 +32,16 @@ export function ActionableItem({ item }: { item: Item }) {
           null}
 
       <FlatList
-          data={actions}
+          data={simpleActions(item)}
           style={{marginTop: 16}}
-          keyExtractor={(action) => action.title}
+          keyExtractor={(action) => action.id}
           renderItem={({item: action}) => {
-            return (
-              <Button
-                  icon={action.icon}
-                  mode="contained"
-                  color={action.color}
-                  style={{marginTop: 8}}
-                  onPress={() => {
-                    action.perform({
-                      item,
-                      update: async (primary, additional) => {
-                        for (const item of (additional || [])) {
-                          await store.save(item);
-                        }
-                        await store.save(primary);
-                      },
-                      navigationPush: (...args) => navigation.push(...args),
-                    });
-                  }}>
-                {action.title}
-              </Button>
-            );
-          }}/>
+            const inner = action.render(item);
+            if (inner == null) return null;
+
+            return <View style={{marginTop: 8}}>{inner}</View>;
+          }}
+          />
     </View>
   );
 }

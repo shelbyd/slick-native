@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
@@ -100,62 +100,21 @@ function Parent({ item }: { item: Item }) {
 }
 
 function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => void }) {
-  const navigation = useNavigation();
-  const store = useContext(StoreContext);
-  const theme = useTheme();
-
-  const actions = fullActions(item);
-
-  const [modal, setModal] = useState(null);
-
-  if (actions.length === 0) {
-    return null;
-  }
-
-  const containerStyle = {
-    backgroundColor: theme.colors.background,
-    padding: 16,
-    margin: 16,
-  };
-
   return (
-    <View style={{marginTop: 8}}>
-      <Portal>
-        <Modal
-            visible={modal != null}
-            onDismiss={() => setModal(null)}
-            contentContainerStyle={containerStyle}>
-          {modal}
-        </Modal>
-      </Portal>
+    <View>
       <Title>Actions</Title>
-      {
-        actions.map(action => {
-          return (
-            <Button
-                icon={action.icon}
-                mode="contained"
-                color={action.color}
-                key={action.title}
-                style={{marginTop: 8}}
-                onPress={() => {
-                  action.perform({
-                    item,
-                    update: async (primary, additional) => {
-                      for (const item of (additional || [])) {
-                        await store.save(item);
-                      }
-                      onChange(primary);
-                    },
-                    render: setModal,
-                    navigationPush: (...args) => navigation.push(...args),
-                  });
-                }}>
-              {action.title}
-            </Button>
-          );
-        })
-      }
+
+      <FlatList
+          data={fullActions(item)}
+          style={{marginTop: 16}}
+          keyExtractor={(action) => action.id}
+          renderItem={({item: action}) => {
+            const inner = action.render(item);
+            if (inner == null) return null;
+
+            return <View style={{marginTop: 8}}>{inner}</View>;
+          }}
+          />
     </View>
   );
 }

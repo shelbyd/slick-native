@@ -1,3 +1,9 @@
+import { useContext, useState } from 'react';
+import { View } from 'react-native';
+import { useTheme, Button, Portal, Modal } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+
+import { StoreContext } from './Injection';
 import { empty, timePlusDuration, Item, Kind, KIND_DATA, ONE_HOUR } from './Item';
 import { PickItem } from './PickItem';
 
@@ -14,109 +20,146 @@ export interface Action {
   }) => Item;
 }
 
-const COMMON_ACTIONS: Action[] = [
-  {
-    title : 'Complete',
-    icon : 'check',
-    color : 'green',
-    applies : (item) => {
-      if (item.completedAt != null)
-        return false;
-      return [
-        Kind.NEXT_ACTION,
-        Kind.INBOX,
-        Kind.WAITING_FOR,
-        Kind.PROJECT,
-      ].includes(item.kind);
-    },
-    perform : ({update, item}) => update({...item, completedAt : new Date()}),
-  },
-  {
-    title : 'Add Child',
-    icon : 'file-tree',
-    color : KIND_DATA[Kind.PROJECT].color,
-    applies : (item) => {
-      if (item.completedAt != null)
-        return false;
-      return [Kind.PROJECT].includes(item.kind);
-    },
-    perform : ({item, navigationPush}) => {
-      const newItem = empty();
-      newItem.kind = Kind.NEXT_ACTION;
-      newItem.parent = item.id;
-      navigationPush('ItemDetails', {item: newItem});
-    },
-  },
-  {
-    title : 'Snooze 1h',
-    icon : 'alarm-snooze',
-    color : 'blue',
-    applies : (item) => {
-      if (item.completedAt != null) return false;
-      if (item.snoozedUntil > new Date()) return false;
-      return [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind);
-    },
-    perform : ({item, update}) => {
-      update({...item, snoozedUntil: timePlusDuration(ONE_HOUR)});
-    },
-  },
-  {
-    title : 'Snooze 20h',
-    icon : 'alarm-snooze',
-    color : 'blue',
-    applies : (item) => {
-      if (item.completedAt != null) return false;
-      if (item.snoozedUntil > new Date()) return false;
-      return [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind);
-    },
-    perform : ({item, update}) => {
-      update({...item, snoozedUntil: timePlusDuration(20 * ONE_HOUR)});
-    },
-  },
-];
-
-const DEEP_ACTIONS: Action[] = [
-  {
-    title : 'Set Parent',
-    icon : 'file-tree',
-    color : KIND_DATA[Kind.PROJECT].color,
-    applies :
-        (item) => [Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.PROJECT].includes(
-            item.kind),
-    perform: ({item, update, render}) => {
-      const setParent = (project) => {
-        if (project == null) return render(null);
-
-        update(
-          {...item, parent: project.id},
-          [{...project, children: [...project.children, item.id]}]
-        );
-      };
-
-      render(
-        <PickItem
-            filter={(i) => i.kind === Kind.PROJECT && i.id !== item.parent}
-            onSelected={setParent} />
-      );
-    }
-  },
-  {
-    title : 'Clear Parent',
-    icon : 'file-tree',
-    color : KIND_DATA[Kind.PROJECT].color,
-    applies : (item) => {
-      return item.parent != null;
-    },
-    perform : ({item, update}) => {
-      update({...item, parent: null});
-    },
-  },
-];
-
 export function fullActions(item: Item) {
-  return [...COMMON_ACTIONS, ...DEEP_ACTIONS].filter(action => action.applies(item));
+  return [
+    ...simpleActions(item),
+    {
+      id: 'set-parent',
+      render: (item) => {
+        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.PROJECT].includes(item.kind)) return null;
+
+        return (
+          <ActionButton
+              text='Set Parent'
+              icon='file-tree'
+              color='yellow'
+              onPress={async ({store, renderModal}) => {
+                renderModal(
+                  <PickItem
+                      filter={(i) => i.kind === Kind.PROJECT && i.id !== item.parent}
+                      onSelected={async (project) => {
+                        if (project == null) return;
+
+                        await store.save({...item, parent: project.id});
+                        renderModal(null);
+                      }} />
+                );
+              }} />
+        );
+      },
+    },
+    {
+      id: 'clear-parent',
+      render: (item) => {
+        if (item.parent == null) return null;
+
+        return (
+          <ActionButton text='Clear Parent' icon='file-tree' color='yellow' onPress={async ({store}) => {
+            await store.save({...item, parent: null});
+          }}/>
+        );
+      },
+    },
+  ];
 }
 
 export function simpleActions(item: Item) {
-  return COMMON_ACTIONS.filter(action => action.applies(item));
+  return [
+    {
+      id: 'complete',
+      render: (item: Item) => {
+        if (item.completedAt != null) return null;
+
+        const completable = [Kind.NEXT_ACTION, Kind.INBOX, Kind.WAITING_FOR, Kind.PROJECT].includes(item.kind);
+        if (!completable) return null;
+
+        return (
+          <ActionButton text='Complete' icon='check' color='green' onPress={async ({store}) => {
+            await store.save({...item, completedAt: new Date()});
+          }}/>
+        );
+      },
+    },
+    {
+      id: 'snooze-1h',
+      render: () => {
+        if (item.completedAt != null) return null;
+        if (item.snoozedUntil > new Date()) return null;
+        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind)) return null;
+
+        return (
+          <ActionButton text='Snooze 1h' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
+            await store.save({...item, snoozedUntil: timePlusDuration(ONE_HOUR)});
+          }}/>
+        );
+      },
+    },
+    {
+      id: 'snooze-20h',
+      render: () => {
+        if (item.completedAt != null) return null;
+        if (item.snoozedUntil > new Date()) return null;
+        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind)) return null;
+
+        return (
+          <ActionButton text='Snooze 20h' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
+            await store.save({...item, snoozedUntil: timePlusDuration(20 * ONE_HOUR)});
+          }}/>
+        );
+      },
+    },
+    {
+      id: 'add-child',
+      render: () => {
+        if (item.completedAt != null) return null;
+        if (![Kind.PROJECT].includes(item.kind)) return null;
+
+        return (
+          <ActionButton text='Add Child' icon='file-tree' color='yellow' onPress={({navigation}) => {
+            const newItem = empty();
+            newItem.kind = Kind.NEXT_ACTION;
+            newItem.parent = item.id;
+            navigation.push('ItemDetails', {item: newItem});
+          }}/>
+        );
+      },
+    },
+  ];
+}
+
+function ActionButton({icon, color, text, onPress}) {
+  const store = useContext(StoreContext);
+  const navigation = useNavigation();
+
+  const theme = useTheme();
+  const [modal, setModal] = useState(null);
+  const renderModal = (content) => setModal(content);
+
+  const containerStyle = {
+    backgroundColor: theme.colors.background,
+    padding: 16,
+    margin: 16,
+  };
+
+  return (
+    <View>
+      <Portal>
+        <Modal
+            visible={modal != null}
+            onDismiss={() => setModal(null)}
+            contentContainerStyle={containerStyle}>
+          {modal}
+        </Modal>
+      </Portal>
+
+      <Button
+          icon={icon}
+          color={color}
+          mode='contained'
+          onPress={() => onPress({store, navigation, renderModal})}
+          >
+        {text}
+      </Button>
+    </View>
+  );
 }
