@@ -200,4 +200,42 @@ describe('Store', () => {
       expect(seen).toEqual([0, 1, 0]);
     });
   });
+
+  describe('watch', () => {
+    it('updates immediately with item', async () => {
+      const item = savable();
+      await store.save(item);
+
+      const seen = watch(store.watch(item.id));
+      await new Promise(r => setTimeout(r));
+
+      expect(seen.length).toEqual(1);
+    });
+
+    it('updates when item is saved', async () => {
+      const item = savable();
+      await store.save(item);
+
+      const seen = watch(store.watch(item.id));
+
+      item.title = 'Different';
+      await store.save(item);
+
+      expect(seen.length).toEqual(2);
+      expect(seen[1].title).toEqual('Different');
+    });
+
+    it('updates when item is deleted', async () => {
+      const item = savable();
+      await store.save(item);
+
+      const seen = watch(store.watch(item.id));
+
+      item.title = '';
+      await store.save(item);
+
+      expect(seen.length).toEqual(2);
+      expect(seen[1]).toEqual(null);
+    });
+  });
 });

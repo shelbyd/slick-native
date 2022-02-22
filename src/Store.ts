@@ -1,5 +1,6 @@
 import deepEqual from 'deep-equal';
-import { BehaviorSubject, ReplaySubject, Observable } from 'rxjs';
+import { BehaviorSubject, ReplaySubject, Subject, Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Item, parseMigrate } from './Item';
@@ -8,6 +9,7 @@ export class Store {
   public readonly savingSubject = new BehaviorSubject(0);
 
   private readonly _openItems = new ReplaySubject(1);
+  private readonly itemUpdates = new Subject();
 
   constructor(private readonly backing: AsyncStorage) {}
 
@@ -20,9 +22,11 @@ export class Store {
       if (item.title == "") {
         await this.backing.removeItem(`@items/${item.id}`);
         await this.maintainContraints(saved, null);
+        this.itemUpdates.next({id: item.id, value: null});
       } else {
         await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
         await this.maintainContraints(saved, item);
+        this.itemUpdates.next({id: item.id, value: item});
       }
 
       await this.notifyItemChange();
@@ -74,6 +78,18 @@ export class Store {
 
     const items = migrated.map(([item, _]) => item);
     this._openItems.next(items);
+  }
+
+  watch(id: string): Observable<Item|null> {
+    (async () => {
+      const item = await this.load(id);
+      this.itemUpdates.next({id: item.id, value: item});
+    })();
+
+    return this.itemUpdates.pipe(
+      filter(({id: itemId}) => itemId == id),
+      map(({value}) => value)
+    );
   }
 
   private async maintainContraints(previous: Item|null, current: Item|null) {

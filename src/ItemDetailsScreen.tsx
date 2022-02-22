@@ -21,6 +21,14 @@ export default function ItemDetailsScreen({ route, navigation }) {
     return unsub;
   }, [item]);
 
+  useEffect(() => {
+    const sub = store.watch(item.id).subscribe(i => {
+      if (i == null) return navigation.goBack();
+      setItem(i);
+    });
+    return () => sub.unsubscribe();
+  }, [item.id]);
+
   return (
     <ScreenRoot>
       <View style={styles.container}>
