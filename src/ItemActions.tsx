@@ -60,6 +60,16 @@ export function fullActions(item: Item) {
         );
       },
     },
+    {
+      id: 'delete',
+      render: (item) => {
+        return (
+          <ActionButton text='Delete' icon='delete' color='red' onPress={async ({store}) => {
+            await store.delete(item.id);
+          }}/>
+        );
+      },
+    },
   ];
 }
 
