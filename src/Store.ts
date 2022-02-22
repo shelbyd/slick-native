@@ -1,5 +1,5 @@
 import deepEqual from 'deep-equal';
-import { BehaviorSubject, ReplaySubject, Subject, Observable } from 'rxjs';
+import { EMPTY, BehaviorSubject, ReplaySubject, Subject, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -17,22 +17,28 @@ export class Store {
     this.savingSubject.next(this.savingSubject.value + 1);
 
     try {
-      const saved = await this.load(item.id);
-
       if (item.title == "") {
-        await this.backing.removeItem(`@items/${item.id}`);
-        await this.maintainContraints(saved, null);
-        this.itemUpdates.next({id: item.id, value: null});
-      } else {
-        await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
-        await this.maintainContraints(saved, item);
-        this.itemUpdates.next({id: item.id, value: item});
+        return await this.delete(item.id);
       }
 
+      const saved = await this.load(item.id);
+      await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
+      await this.maintainContraints(saved, item);
+      this.itemUpdates.next({id: item.id, value: item});
       await this.notifyItemChange();
     } finally {
       this.savingSubject.next(this.savingSubject.value - 1);
     }
+  }
+
+  async delete(id: string) {
+    const saved = await this.load(id);
+
+    await this.backing.removeItem(`@items/${id}`);
+    await this.maintainContraints(saved, null);
+
+    this.itemUpdates.next({id, value: null});
+    await this.notifyItemChange();
   }
 
   async load(id: string|null): Promise<Item|null> {
@@ -80,7 +86,9 @@ export class Store {
     this._openItems.next(items);
   }
 
-  watch(id: string): Observable<Item|null> {
+  watch(id: string|null): Observable<Item|null> {
+    if (id == null) return EMPTY;
+
     (async () => {
       const item = await this.load(id);
       this.itemUpdates.next({id: item.id, value: item});

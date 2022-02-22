@@ -14,20 +14,25 @@ export default function ItemDetailsScreen({ route, navigation }) {
   const store = useContext(StoreContext);
 
   useEffect(() => {
+    if (item == null) return;
+
     const unsub = navigation.addListener('beforeRemove', async () => {
       // TODO(shelbyd): Stop navigation until save is done.
       await store.save(item);
     });
+
     return unsub;
   }, [item]);
 
   useEffect(() => {
-    const sub = store.watch(item.id).subscribe(i => {
-      if (i == null) return navigation.goBack();
-      setItem(i);
-    });
+    const sub = store.watch(item?.id).subscribe(setItem);
     return () => sub.unsubscribe();
-  }, [item.id]);
+  }, [item?.id]);
+
+  if (item == null) {
+    setTimeout(() => navigation.goBack());
+    return null;
+  }
 
   return (
     <ScreenRoot>
