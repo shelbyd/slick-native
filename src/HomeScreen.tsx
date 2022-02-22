@@ -25,7 +25,7 @@ export default function HomeScreen({ navigation }) {
 
   const nextAction = openItems
       .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
-      .filter(i => i.kind == Kind.NEXT_ACTION)[0];
+      .filter(i => [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(i.kind))[0];
 
   const navigateTo = (item) => () => navigation.push('ItemDetails', {item});
 

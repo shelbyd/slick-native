@@ -1,4 +1,4 @@
-import { empty, isUnacked, timePlusDuration, Item, Kind, KIND_DATA, ONE_HOUR, TWENTY_FOUR_HOURS } from './Item';
+import { empty, timePlusDuration, Item, Kind, KIND_DATA, ONE_HOUR } from './Item';
 import { PickItem } from './PickItem';
 
 export interface Action {
@@ -54,32 +54,23 @@ const COMMON_ACTIONS: Action[] = [
     applies : (item) => {
       if (item.completedAt != null) return false;
       if (item.snoozedUntil > new Date()) return false;
-      return [Kind.NEXT_ACTION].includes(item.kind);
+      return [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind);
     },
     perform : ({item, update}) => {
       update({...item, snoozedUntil: timePlusDuration(ONE_HOUR)});
     },
   },
   {
-    title : 'Snooze 24h',
+    title : 'Snooze 20h',
     icon : 'alarm-snooze',
     color : 'blue',
     applies : (item) => {
       if (item.completedAt != null) return false;
       if (item.snoozedUntil > new Date()) return false;
-      return [Kind.NEXT_ACTION].includes(item.kind);
+      return [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind);
     },
     perform : ({item, update}) => {
-      update({...item, snoozedUntil: timePlusDuration(TWENTY_FOUR_HOURS)});
-    },
-  },
-  {
-    title : 'Acknowledge',
-    icon : 'clock-check',
-    color : 'blue',
-    applies : (item) => isUnacked(item),
-    perform : ({item, update}) => {
-      update({...item, ackedAt: new Date()});
+      update({...item, snoozedUntil: timePlusDuration(20 * ONE_HOUR)});
     },
   },
 ];

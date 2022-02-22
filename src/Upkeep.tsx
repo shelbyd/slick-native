@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { Title } from 'react-native-paper';
 
 import { ActionableItem } from './ActionableItem';
-import { isUnacked, Item, Kind } from './Item';
+import { Item, Kind } from './Item';
 
 export function nextUpkeepTask(openItems: Item[]) {
   const itemMap = new Map();
@@ -13,7 +13,6 @@ export function nextUpkeepTask(openItems: Item[]) {
   const itemGetters = [
     () => openItems.find(i => i.kind === Kind.INBOX),
     () => openItems.find(i => isProjectMissingItem(i, itemMap)),
-    () => openItems.find(i => isUnacked(i)),
   ];
 
   for (const getter of itemGetters) {

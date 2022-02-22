@@ -22,7 +22,7 @@ export function ActionableItem({ item }: { item: Item }) {
           <Avatar.Icon
               icon={desc.icon}
               style={{marginRight: 16, backgroundColor: desc.color}} />
-          <Title>{item.title}</Title>
+          <Title style={{flex: 1}}>{item.title}</Title>
         </View>
       </TouchableOpacity>
 
