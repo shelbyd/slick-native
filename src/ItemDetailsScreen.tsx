@@ -39,7 +39,7 @@ export default function ItemDetailsScreen({ route, navigation }) {
       <View style={styles.container}>
         <TextInput
             label="Title"
-            autoFocus={true}
+            autoFocus={item.title == ''}
             value={item.title}
             onChangeText={text => setItem({...item, title: text})} />
         <KindSelector current={item.kind} onChange={kind => setItem({...item, kind})} />
