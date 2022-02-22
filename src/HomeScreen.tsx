@@ -10,6 +10,11 @@ import { StoreContext } from './Injection';
 import { nextUpkeepTask } from './Upkeep';
 import { ScreenRoot, CenterContent } from './UiUtils';
 
+function useForceRender() {
+  const [count, setCount] = useState(0);
+  return () => setCount(count + 1);
+}
+
 export default function HomeScreen({ navigation }) {
   const [openItems, setOpenItems] = useState([]);
   const store = useContext(StoreContext);
@@ -25,6 +30,22 @@ export default function HomeScreen({ navigation }) {
 
   const isActionable = (i) =>
     [Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.SOMEDAY].includes(i.kind);
+
+  const forceRender = useForceRender();
+  useEffect(() => {
+    const unsnoozes = openItems
+      .filter(isActionable)
+      .filter(i => i.snoozedUntil > new Date())
+      .map(i => i.snoozedUntil);
+    const nextUnsnooze = new Date(Math.min(...unsnoozes));
+
+    const delay = nextUnsnooze.getTime() - new Date().getTime();
+    if (isNaN(delay)) return;
+
+    const timeout = setTimeout(forceRender, delay);
+    return () => clearTimeout(timeout);
+  }, [openItems]);
+
   const nextAction = openItems
       .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
       .filter(isActionable)[0];
