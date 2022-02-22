@@ -119,6 +119,21 @@ export function simpleActions(item: Item) {
       },
     },
     {
+      id: 'snooze-7d',
+      render: () => {
+        if (item.completedAt != null) return null;
+        if (item.snoozedUntil > new Date()) return null;
+        if (![Kind.SOMEDAY].includes(item.kind)) return null;
+
+        return (
+          <ActionButton text='Snooze 7 days' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
+            const hours = 7 * 24 - 4;
+            await store.save({...item, snoozedUntil: timePlusDuration(hours * ONE_HOUR)});
+          }}/>
+        );
+      },
+    },
+    {
       id: 'add-child',
       render: () => {
         if (item.completedAt != null) return null;

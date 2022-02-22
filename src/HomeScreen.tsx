@@ -23,9 +23,11 @@ export default function HomeScreen({ navigation }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const isActionable = (i) =>
+    [Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.SOMEDAY].includes(i.kind);
   const nextAction = openItems
       .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
-      .filter(i => [Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(i.kind))[0];
+      .filter(isActionable)[0];
 
   const navigateTo = (item) => () => navigation.push('ItemDetails', {item});
 

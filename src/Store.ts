@@ -91,7 +91,7 @@ export class Store {
 
     (async () => {
       const item = await this.load(id);
-      this.itemUpdates.next({id: item.id, value: item});
+      this.itemUpdates.next({id, value: item});
     })();
 
     return this.itemUpdates.pipe(
