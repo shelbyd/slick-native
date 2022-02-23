@@ -91,6 +91,8 @@ export class Store {
 
     (async () => {
       const item = await this.load(id);
+      if (item == null) return;
+
       this.itemUpdates.next({id, value: item});
     })();
 

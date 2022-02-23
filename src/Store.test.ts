@@ -237,5 +237,14 @@ describe('Store', () => {
       expect(seen.length).toEqual(2);
       expect(seen[1]).toEqual(null);
     });
+
+    it('does not emit null for new item', async () => {
+      const item = savable();
+      const seen = watch(store.watch(item.id));
+
+      await new Promise(r => setTimeout(r));
+
+      expect(seen).toEqual([]);
+    });
   });
 });
