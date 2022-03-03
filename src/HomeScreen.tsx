@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, ScrollView, View } from 'react-native';
 import { Avatar, Button, Divider, FAB, Text, Title, List } from 'react-native-paper';
 
 import { ActionableItem } from './ActionableItem';
@@ -48,18 +48,15 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScreenRoot>
-      <View style={{flex: 1, alignItems: 'stretch'}}>
+      <ScrollView contentContainerStyle={{alignItems: 'stretch'}}>
         {nextAction == null ? null : <ActionableItem item={nextAction} />}
         <Divider style={{flex: 0}} />
         {nextUpkeepTask(openItems)}
         <Divider style={{flex: 0}} />
-        <FlatList
-            style={{flex: 1}}
-            data={openItems}
-            renderItem={({item}) =>
-              <ItemInList item={item} key={item.id} onPress={navigateTo(item)} />
-            } />
-      </View>
+        {openItems.map(item =>
+            <ItemInList item={item} key={item.id} onPress={navigateTo(item)} />
+        )}
+      </ScrollView>
 
       <FAB style={styles.fab} icon="plus" onPress={navigateTo(empty())} />
     </ScreenRoot>
