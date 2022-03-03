@@ -16,7 +16,9 @@ export function ActionableItem({ item }: { item: Item }) {
 
   return (
     <View style={{padding: 16}}>
-      <TouchableOpacity onPress={() => navigation.push('ItemDetails', {item})}>
+      <TouchableOpacity
+          style={{marginBottom: 8}}
+          onPress={() => navigation.push('ItemDetails', {item})}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <Avatar.Icon
               icon={desc.icon}
@@ -26,22 +28,17 @@ export function ActionableItem({ item }: { item: Item }) {
       </TouchableOpacity>
 
       {item.kind === Kind.INBOX ?
-          <View style={{marginTop: 16}}>
+          <View>
             <KindSelector current={item.kind} onChange={(kind) => store.save({...item, kind})} />
           </View> :
           null}
 
-      <FlatList
-          data={simpleActions(item)}
-          style={{marginTop: 16}}
-          keyExtractor={(action) => action.id}
-          renderItem={({item: action}) => {
-            const inner = action.render(item);
-            if (inner == null) return null;
+      {simpleActions(item).map(action => {
+        const inner = action.render(item);
+        if (inner == null) return null;
 
-            return <View style={{marginTop: 8}}>{inner}</View>;
-          }}
-          />
+        return <View key={action.id} style={{marginTop: 8}}>{inner}</View>;
+      })}
     </View>
   );
 }
