@@ -11,6 +11,8 @@ export interface Item {
   parent?: ItemId;
   children: ItemId[];
   snoozedUntil?: Date;
+  blockers: ItemId[];
+  blocking: ItemId[];
 };
 
 export enum Kind {
@@ -53,6 +55,14 @@ export function parseMigrate(json: string): [Item, boolean] {
 
   if (fromJson.children == null) {
     fromJson.children = [];
+  }
+
+  if (fromJson.blockers == null) {
+    fromJson.blockers = [];
+  }
+
+  if (fromJson.blocking == null) {
+    fromJson.blocking = [];
   }
 
   return [fromJson, mutated];

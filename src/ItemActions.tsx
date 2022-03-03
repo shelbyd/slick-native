@@ -61,6 +61,36 @@ export function fullActions(item: Item) {
       },
     },
     {
+      id: 'add-blocker',
+      render: (item) => {
+        if (item.completedAt != null) return null;
+
+        return (
+          <ActionButton
+              text='Add Blocker'
+              icon='cancel'
+              color='orange'
+              onPress={async ({store, renderModal}) => {
+                renderModal(
+                  <PickItem
+                      filter={(i) => {
+                        const validType = [Kind.PROJECT, Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(i.kind);
+                        const already = item.blockers.includes(i.id);
+                        const completed = i.completedAt != null;
+                        return validType && !already && !completed;
+                      }}
+                      onSelected={async (blocker) => {
+                        if (blocker == null) return;
+
+                        await store.save({...item, blockers: [...item.blockers, blocker.id]});
+                        renderModal(null);
+                      }} />
+                );
+              }} />
+        );
+      }
+    },
+    {
       id: 'delete',
       render: (item) => {
         return (
