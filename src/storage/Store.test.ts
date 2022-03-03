@@ -16,7 +16,7 @@ class MockStorage {
     this.map.delete(key);
   }
 
-  getAllKeys(): string[] {
+  async getAllKeys(): string[] {
     return Array.from(this.map.keys());
   }
 

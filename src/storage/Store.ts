@@ -4,12 +4,15 @@ import { filter, map } from 'rxjs/operators';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Item, parseMigrate } from '../Item';
+import { ScopedStorage } from './ScopedStorage';
 
 export class Store {
   public readonly savingSubject = new BehaviorSubject(0);
 
   private readonly _openItems = new ReplaySubject(1);
   private readonly itemUpdates = new Subject();
+
+  private readonly items = new ScopedStorage(this.backing, '@items');
 
   constructor(private readonly backing: AsyncStorage) {}
 
@@ -22,7 +25,7 @@ export class Store {
       }
 
       const saved = await this.load(item.id);
-      await this.backing.setItem(`@items/${item.id}`, JSON.stringify(item));
+      await this.items.setItem(item.id, JSON.stringify(item));
       await this.maintainContraints(saved, item);
       this.itemUpdates.next({id: item.id, value: item});
       await this.notifyItemChange();
@@ -34,7 +37,7 @@ export class Store {
   async delete(id: string) {
     const saved = await this.load(id);
 
-    await this.backing.removeItem(`@items/${id}`);
+    await this.items.removeItem(id);
     await this.maintainContraints(saved, null);
 
     this.itemUpdates.next({id, value: null});
@@ -44,7 +47,7 @@ export class Store {
   async load(id: string|null): Promise<Item|null> {
     if (id == null) return null;
 
-    const json = await this.backing.getItem(`@items/${id}`);
+    const json = await this.items.getItem(id);
     if (json == null) return null;
 
     const [item, didMigrate] = parseMigrate(json);
@@ -72,8 +75,8 @@ export class Store {
   }
 
   private async notifyItemChange() {
-    const keys = await this.backing.getAllKeys();
-    const withKeys = await this.backing.multiGet(keys);
+    const keys = await this.items.getAllKeys();
+    const withKeys = await this.items.multiGet(keys);
     const migrated = withKeys.map(([_key, json]) => parseMigrate(json));
 
     for (const [item, didMigrate] of migrated) {
