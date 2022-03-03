@@ -6,7 +6,7 @@ import { IconButton, DefaultTheme, Provider as PaperProvider } from 'react-nativ
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { StoreContext } from './src/Injection';
+import { migrator, StoreContext } from './src/Injection';
 import HomeScreen from './src/HomeScreen';
 import ItemDetailsScreen from './src/ItemDetailsScreen';
 
@@ -32,6 +32,15 @@ const navigationScreenOptions = {
 };
 
 export default function App() {
+  const [migrationsDone, setMigrationsDone] = useState(false);
+
+  useEffect(async () => {
+    await migrator.perform();
+    setMigrationsDone(true);
+  }, []);
+
+  if (!migrationsDone) return null;
+
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer theme={DarkTheme}>
