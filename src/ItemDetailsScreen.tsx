@@ -132,7 +132,7 @@ function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => voi
         const inner = action.render(item);
         if (inner == null) return null;
 
-        return <View style={{marginTop: 8}}>{inner}</View>;
+        return <View key={action.id} style={{marginTop: 8}}>{inner}</View>;
       })}
     </View>
   );

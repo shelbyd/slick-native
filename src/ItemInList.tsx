@@ -5,17 +5,21 @@ import { Item, KIND_DATA } from './Item';
 
 export function ItemInList({ item, onPress }: { item: Item, onPress: () => void }) {
   const kindDesc = KIND_DATA[item.kind];
-  const navigation = useNavigation();
+  let maybeNavigate = () => {};
 
-  const navigateToItem = () => {
-    navigation.push('ItemDetails', {item: item});
-  };
+  try {
+    const navigation = useNavigation();
+
+    maybeNavigate = () => {
+      navigation.push('ItemDetails', {item: item});
+    };
+  } catch (e) {}
 
   return (
     <List.Item
         title={item.title}
         key={item.id}
         left={props => <List.Icon {...props} color={kindDesc.color} icon={kindDesc.icon} />}
-        onPress={onPress || navigateToItem} />
+        onPress={onPress || maybeNavigate} />
   );
 }

@@ -31,6 +31,8 @@ export function empty(): Item {
     createdAt: new Date(),
     parent: null,
     children: [],
+    blockers: [],
+    blocking: [],
   };
 }
 

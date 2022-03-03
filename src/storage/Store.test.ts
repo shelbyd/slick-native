@@ -161,6 +161,20 @@ describe('Store', () => {
       expect(seen.length).toEqual(2);
       expect(seen[1][0].id).toEqual(item.id);
     });
+
+    it('includes dag items', async () => {
+      const seen = watch(store.openItems());
+      await new Promise(resolve => setTimeout(resolve));
+
+      const parent = savable();
+      await store.save(parent);
+      const child = savable();
+      child.parent = parent.id;
+      await store.save(child);
+
+      expect(seen.length).toEqual(3);
+      expect(seen[2].find(i => i.id == parent.id).children).toEqual([child.id]);
+    });
   });
 
   describe('savingSubject', () => {

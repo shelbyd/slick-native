@@ -101,16 +101,10 @@ export class Store {
 
   private async notifyItemChange() {
     const keys = await this.items.getAllKeys();
-    const withKeys = await this.items.multiGet(keys);
-    const migrated = withKeys.map(([ _key, json ]) => parseMigrate(json));
-
-    for (const [item, didMigrate] of migrated) {
-      if (didMigrate) {
-        await this.save(item);
-      }
+    const items = [];
+    for (const key of keys) {
+      items.push(await this.load(key));
     }
-
-    const items = migrated.map(([ item, _ ]) => item);
     this._openItems.next(items);
   }
 
