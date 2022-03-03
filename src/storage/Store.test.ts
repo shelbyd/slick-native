@@ -1,4 +1,4 @@
-import { empty, Item } from './Item';
+import { empty, Item } from '../Item';
 import { Store } from './Store';
 
 class MockStorage {

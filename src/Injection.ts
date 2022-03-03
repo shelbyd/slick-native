@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Store } from './Store';
+import { Store } from './storage/Store';
 
 const store = new Store(AsyncStorage);
 export const StoreContext = createContext(store);

@@ -3,7 +3,7 @@ import { EMPTY, BehaviorSubject, ReplaySubject, Subject, Observable } from 'rxjs
 import { filter, map } from 'rxjs/operators';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Item, parseMigrate } from './Item';
+import { Item, parseMigrate } from '../Item';
 
 export class Store {
   public readonly savingSubject = new BehaviorSubject(0);
