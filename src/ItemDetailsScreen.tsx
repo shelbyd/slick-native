@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, ScrollView, View } from 'react-native';
 import { useTheme, Button, Modal, Portal, Text, TextInput, Title } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
@@ -36,26 +36,31 @@ export default function ItemDetailsScreen({ route, navigation }) {
 
   return (
     <ScreenRoot>
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <TextInput
             label="Title"
             autoFocus={item.title == ''}
             value={item.title}
-            onChangeText={text => setItem({...item, title: text})} />
-        <KindSelector current={item.kind} onChange={kind => setItem({...item, kind})} />
-        <Parent item={item} />
+            onChangeText={text => setItem({...item, title: text})}
+            key="title"/>
+        <KindSelector current={item.kind} onChange={kind => setItem({...item, kind})} key="kind-selector" />
+
         <Actions item={item} onChange={i => {
           setItem(i);
           setTimeout(() => navigation.goBack());
-        }} />
-      </View>
+        }} key="actions" />
+
+        <ItemList items={item.parent == null ? [] : [item.parent]} title="Parent" key="parent" />
+        <ItemList items={item.blockers} title="Blockers" key="blockers" />
+        <ItemList items={item.blocking} title="Blocking" key="blocking" />
+        <ItemList items={item.children} title="Children" key="children" />
+      </ScrollView>
     </ScreenRoot>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     flexDirection: 'column',
     justifyContent: 'flex-start',
 
@@ -91,23 +96,29 @@ export function KindSelector({current, onChange}: { current: Kind, onChange: (ki
   );
 }
 
-function Parent({ item }: { item: Item }) {
-  if (item.parent == null) return null;
-
-  const [parent, setParent] = useState(null);
+function ItemList({ items, title }: { items: ItemId[], title: string }) {
+  const [itemMap, setItemMap] = useState(new Map());
   const store = useContext(StoreContext);
 
   useEffect(async () => {
-    const loaded = await store.load(item.parent);
-    setParent(loaded);
-  }, [item]);
+    const map = new Map();
+    for (const id of items) {
+      const item = await store.load(id);
+      map.set(id, item);
+    }
+    setItemMap(map);
+  }, [items]);
 
-  if (parent == null) return null;
+  if (itemMap.size == 0) return null;
 
   return (
     <View style={{marginTop: 8}}>
-      <Title>Parent</Title>
-      <ItemInList item={parent} />
+      <Title>{title}</Title>
+      {
+        items
+          .map(i => itemMap.get(i))
+          .filter(i => i != null)
+          .map(i => <ItemInList item={i} key={i.id} />)}
     </View>
   );
 }
@@ -117,17 +128,12 @@ function Actions({ item, onChange }: { item: Item, onChange: (item: Item) => voi
     <View>
       <Title>Actions</Title>
 
-      <FlatList
-          data={fullActions(item)}
-          style={{marginTop: 16}}
-          keyExtractor={(action) => action.id}
-          renderItem={({item: action}) => {
-            const inner = action.render(item);
-            if (inner == null) return null;
+      {fullActions(item).map(action => {
+        const inner = action.render(item);
+        if (inner == null) return null;
 
-            return <View style={{marginTop: 8}}>{inner}</View>;
-          }}
-          />
+        return <View style={{marginTop: 8}}>{inner}</View>;
+      })}
     </View>
   );
 }
