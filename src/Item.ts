@@ -27,6 +27,7 @@ export function empty(): Item {
     kind: Kind.INBOX,
     title: '',
     createdAt: new Date(),
+    parent: null,
     children: [],
   };
 }

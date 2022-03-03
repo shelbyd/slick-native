@@ -4,6 +4,8 @@ import { filter, map } from 'rxjs/operators';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Item, parseMigrate } from '../Item';
+
+import { DagStorage } from './DagStorage';
 import { ScopedStorage } from './ScopedStorage';
 
 export class Store {
@@ -13,6 +15,9 @@ export class Store {
   private readonly itemUpdates = new Subject();
 
   private readonly items = new ScopedStorage(this.backing, '@items');
+
+  // Parent -> Child
+  private readonly parentChild = new DagStorage(new ScopedStorage(this.backing, '@parent-child'));
 
   constructor(private readonly backing: AsyncStorage) {}
 
@@ -50,10 +55,18 @@ export class Store {
     const json = await this.items.getItem(id);
     if (json == null) return null;
 
-    const [item, didMigrate] = parseMigrate(json);
+    let [item, didMigrate] = parseMigrate(json);
+
+    const [parent, ] = await this.parentChild.incoming(id);
+    item.parent = parent ?? null;
+
+    item.children = await this.parentChild.outgoing(id);
+
     if (didMigrate) {
       await this.save(item);
+      return await this.load(id);
     }
+
     return item;
   }
 
@@ -108,29 +121,13 @@ export class Store {
   private async maintainContraints(previous: Item|null, current: Item|null) {
     if (deepEqual(previous, current)) return;
 
-    if (previous?.parent != current?.parent) {
-      await this.update(previous?.parent, (parent) => {
-        parent.children = parent.children.filter(id => id !== previous.id);
-      });
+    if (current == null) {
+      await this.parentChild.delete(previous.id);
+    } else {
+      const parent = current.parent == null ? [] : [current.parent];
+      await this.parentChild.setIncoming(current.id, parent);
 
-      await this.update(current?.parent, (parent) => {
-        if (!parent.children.includes(current.id)) {
-          parent.children.push(current.id);
-        }
-      });
-    }
-
-    const previousChildren = new Set(previous?.children || []);
-    const currentChildren = new Set(current?.children || []);
-
-    const diff = (a, b) => new Set([...a].filter(a => !b.has(a)));
-
-    for (const childId of diff(previousChildren, currentChildren)) {
-      await this.update(childId, child => child.parent = null);
-    }
-
-    for (const childId of diff(currentChildren, previousChildren)) {
-      await this.update(childId, (child) => child.parent = current.id);
+      await this.parentChild.setOutgoing(current.id, current.children);
     }
   }
 }
