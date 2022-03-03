@@ -36,18 +36,9 @@ export default function HomeScreen({ navigation }) {
 
   const forceRender = useForceRender();
   useEffect(() => {
-    const unsnoozes = openItems
-      .filter(isActionable)
-      .filter(i => i.snoozedUntil > new Date())
-      .map(i => i.snoozedUntil);
-    const nextUnsnooze = new Date(Math.min(...unsnoozes));
-
-    const delay = nextUnsnooze.getTime() - new Date().getTime();
-    if (isNaN(delay)) return;
-
-    const timeout = setTimeout(forceRender, delay);
-    return () => clearTimeout(timeout);
-  }, [openItems]);
+    const interval = setInterval(forceRender, 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const nextAction = openItems
       .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
