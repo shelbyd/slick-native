@@ -28,8 +28,11 @@ export default function HomeScreen({ navigation }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const isActionable = (i) =>
-    [Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.SOMEDAY].includes(i.kind);
+  const isActionable = (i) => {
+    const validType = [Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.SOMEDAY].includes(i.kind);
+    const blocked = i.blockers.length > 0;
+    return validType && !blocked;
+  };
 
   const forceRender = useForceRender();
   useEffect(() => {

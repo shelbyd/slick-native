@@ -115,7 +115,7 @@ export function simpleActions(item: Item) {
 
         return (
           <ActionButton text='Complete' icon='check' color='green' onPress={async ({store}) => {
-            await store.save({...item, completedAt: new Date()});
+            await store.save({...item, completedAt: new Date(), blocking: []});
           }}/>
         );
       },
