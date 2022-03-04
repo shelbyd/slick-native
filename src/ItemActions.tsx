@@ -64,6 +64,7 @@ export function fullActions(item: Item) {
       id: 'add-blocker',
       render: (item) => {
         if (item.completedAt != null) return null;
+        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.PROJECT].includes(item.kind)) return null;
 
         return (
           <ActionButton
