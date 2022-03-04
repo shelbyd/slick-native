@@ -12,7 +12,7 @@ export function nextUpkeepTask(openItems: Item[]) {
 
   const itemGetters = [
     () => openItems.find(i => i.kind === Kind.INBOX),
-    () => openItems.find(i => isProjectMissingItem(i, itemMap)),
+    () => openItems.find(i => isActionableProjectWithoutItem(i, itemMap)),
   ];
 
   for (const getter of itemGetters) {
@@ -25,8 +25,9 @@ export function nextUpkeepTask(openItems: Item[]) {
   return null;
 }
 
-function isProjectMissingItem(project: Item, openItemMap: Map<string, Item>): boolean {
+function isActionableProjectWithoutItem(project: Item, openItemMap: Map<string, Item>): boolean {
   if (project.kind !== Kind.PROJECT) return false;
+  if (project.blockers.length > 0) return false;
 
   const hasOpen = project
       .children
