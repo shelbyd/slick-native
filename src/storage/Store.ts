@@ -101,10 +101,7 @@ export class Store {
 
   private async notifyItemChange() {
     const keys = await this.items.getAllKeys();
-    const items = [];
-    for (const key of keys) {
-      items.push(await this.load(key));
-    }
+    const items = await Promise.all(keys.map(key => this.load(key)));
     this._openItems.next(items);
   }
 
