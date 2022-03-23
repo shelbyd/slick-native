@@ -106,7 +106,7 @@ export class Store {
   private async notifyItemChange() {
     const keys = await this.openSet.allValues();
     const items = await Promise.all(keys.map(key => this.load(key)));
-    this._openItems.next(items);
+    this._openItems.next(items.filter(i => i != null));
   }
 
   watch(id: string|null): Observable<Item|null> {

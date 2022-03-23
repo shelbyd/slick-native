@@ -7,17 +7,32 @@ export class Migrator {
   constructor(private readonly storage: AsyncStorage) {}
 
   async perform() {
-    let version = await this.getVersion();
+    await this.migrateLatest(2, async (version) => {
+      if (version == 0) {
+        // Save relationships between items in DagStorage.
+        await resaveAllItems(this.storage);
+      }
 
-    if (version == 0) {
-      // Save relationships between items in DagStorage.
-      version = await this.incrementVersion(() => resaveAllItems(this.storage));
+      if (version == 1) {
+        // Start saving ids for open items in a separate set.
+        await resaveAllItems(this.storage);
+      }
+    })
+  }
+
+  private async migrateLatest(latestVersion: number, cb: (version: number) => Promise<void>) {
+    const current = await this.getVersion();
+    if (current == latestVersion) {
+      console.log('Already at latest version', current);
+      return;
     }
 
-    if (version == 1) {
-      // Start saving ids for open items in a separate set.
-      version = await this.incrementVersion(() => resaveAllItems(this.storage));
-    }
+    console.log('Migrating from', current, 'to', latestVersion);
+
+    await storeSnapshot(this.storage);
+    await cb(current);
+
+    await this.setVersion(latestVersion);
   }
 
   private async getVersion() {
@@ -27,16 +42,6 @@ export class Migrator {
 
   private async setVersion(v: number) {
     await this.storage.setItem('@storage-meta/version', JSON.stringify(v));
-  }
-
-  async incrementVersion(cb: () => Promise<void>) {
-    await storeSnapshot(this.storage);
-
-    await cb();
-
-    const version = await this.getVersion() + 1;
-    await this.setVersion(version);
-    return version;
   }
 }
 
