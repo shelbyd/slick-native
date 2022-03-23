@@ -7,6 +7,7 @@ import {Item, parseMigrate} from '../Item';
 
 import {DagStorage} from './DagStorage';
 import {ScopedStorage} from './ScopedStorage';
+import {StorageSet} from './StorageSet';
 
 export class Store {
   public readonly savingSubject = new BehaviorSubject(0);
@@ -23,6 +24,8 @@ export class Store {
   private readonly blocking =
       new DagStorage(new ScopedStorage(this.backing, '@blockers'));
 
+  private readonly openSet = new StorageSet(new ScopedStorage(this.backing, '@open'));
+
   constructor(private readonly backing: AsyncStorage) {}
 
   async save(item: Item) {
@@ -36,6 +39,7 @@ export class Store {
       const saved = await this.load(item.id);
       await this.items.setItem(item.id, JSON.stringify(item));
       await this.maintainContraints(saved, item);
+
       this.itemUpdates.next({id : item.id, value : item});
       await this.notifyItemChange();
     } finally {
@@ -100,7 +104,7 @@ export class Store {
   }
 
   private async notifyItemChange() {
-    const keys = await this.items.getAllKeys();
+    const keys = await this.openSet.allValues();
     const items = await Promise.all(keys.map(key => this.load(key)));
     this._openItems.next(items);
   }
@@ -128,6 +132,8 @@ export class Store {
     if (current == null) {
       await this.parentChild.delete(previous.id);
       await this.blocking.delete(previous.id);
+
+      await this.openSet.remove(previous.id);
     } else {
       const parent = current.parent == null ? [] : [ current.parent ];
       await this.parentChild.setIncoming(current.id, parent);
@@ -135,6 +141,12 @@ export class Store {
 
       await this.blocking.setIncoming(current.id, current.blockers);
       await this.blocking.setOutgoing(current.id, current.blocking);
+
+      if (current.completedAt == null) {
+        await this.openSet.insert(current.id);
+      } else {
+        await this.openSet.remove(current.id);
+      }
     }
   }
 }

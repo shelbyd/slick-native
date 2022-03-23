@@ -6,6 +6,10 @@ export class MockStorage {
   }
 
   setItem(key: string, value: string) {
+    if (typeof value !== 'string') {
+      throw new Error('Must setItem with string', value);
+    }
+
     return this.map.set(key, value);
   }
 
