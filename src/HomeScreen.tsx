@@ -40,18 +40,19 @@ export default function HomeScreen({ navigation }) {
     return () => clearInterval(interval);
   }, []);
 
-  const nextAction = openItems
+  const nextActions = openItems
       .filter(i => i.snoozedUntil == null || i.snoozedUntil <= new Date())
-      .filter(isActionable)[0];
+      .filter(isActionable)
+      .slice(0, 3);
 
   const navigateTo = (item) => () => navigation.push('ItemDetails', {item});
 
   return (
     <ScreenRoot>
       <ScrollView contentContainerStyle={{alignItems: 'stretch'}}>
-        {nextAction == null ? null : <ActionableItem item={nextAction} />}
-        <Divider style={{flex: 0}} />
         {nextUpkeepTask(openItems)}
+        <Divider style={{flex: 0}} />
+        {nextActions.map(a => <ActionableItem item={a} />)}
         <Divider style={{flex: 0}} />
         {openItems.map(item =>
             <ItemInList item={item} key={item.id} onPress={navigateTo(item)} />
