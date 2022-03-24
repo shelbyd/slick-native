@@ -24,6 +24,20 @@ export function fullActions(item: Item) {
   return [
     ...simpleActions(item),
     {
+      id: 'snooze-20h',
+      render: () => {
+        if (item.completedAt != null) return null;
+        if (item.snoozedUntil > new Date()) return null;
+        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind)) return null;
+
+        return (
+          <ActionButton text='Snooze 20h' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
+            await store.save({...item, snoozedUntil: timePlusDuration(20 * ONE_HOUR)});
+          }}/>
+        );
+      },
+    },
+    {
       id: 'set-parent',
       render: (item) => {
         if (![Kind.NEXT_ACTION, Kind.WAITING_FOR, Kind.PROJECT].includes(item.kind)) return null;
@@ -131,20 +145,6 @@ export function simpleActions(item: Item) {
         return (
           <ActionButton text='Snooze 1h' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
             await store.save({...item, snoozedUntil: timePlusDuration(ONE_HOUR)});
-          }}/>
-        );
-      },
-    },
-    {
-      id: 'snooze-20h',
-      render: () => {
-        if (item.completedAt != null) return null;
-        if (item.snoozedUntil > new Date()) return null;
-        if (![Kind.NEXT_ACTION, Kind.WAITING_FOR].includes(item.kind)) return null;
-
-        return (
-          <ActionButton text='Snooze 20h' icon='alarm-snooze' color='blue' onPress={async ({store}) => {
-            await store.save({...item, snoozedUntil: timePlusDuration(20 * ONE_HOUR)});
           }}/>
         );
       },
