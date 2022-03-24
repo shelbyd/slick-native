@@ -8,12 +8,12 @@ export class Migrator {
 
   async perform() {
     await this.migrateLatest(2, async (version) => {
-      if (version == 0) {
+      if (version <= 0) {
         // Save relationships between items in DagStorage.
         await resaveAllItems(this.storage);
       }
 
-      if (version == 1) {
+      if (version <= 1) {
         // Start saving ids for open items in a separate set.
         await resaveAllItems(this.storage);
       }

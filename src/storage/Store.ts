@@ -126,9 +126,6 @@ export class Store {
   }
 
   private async maintainContraints(previous: Item|null, current: Item|null) {
-    if (deepEqual(previous, current))
-      return;
-
     if (current == null) {
       await this.parentChild.delete(previous.id);
       await this.blocking.delete(previous.id);
